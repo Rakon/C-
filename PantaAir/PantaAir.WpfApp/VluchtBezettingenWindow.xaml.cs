@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -229,3 +230,214 @@ namespace WpfApp
         }
     }
 }
+
+/*
+using ClassLibrary;
+using System;
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Markup;
+
+namespace WpfApp
+{
+    public class VluchtBezettingenWindow
+    {
+        private List<Vlucht> _vluchten;
+        private Vlucht _geselecteerdeVlucht;
+        internal ComboBox VluchtenComboBox;
+        internal Label AantallenLabel;
+        internal ListBox BezettingenListBox;
+        internal TextBox PassagierNaamFilterTextBox;
+        internal RadioButton GeenMaaltijdTypeFilterRadioButton;
+        internal RadioButton StandaardMaaltijdFilterRadioButton;
+        internal RadioButton VegitarischeMaaltijdFilterRadioButton;
+        internal RadioButton ZetelSorterenRadioButton;
+        internal RadioButton PassagiersnaamSorterenRadioButton;
+        internal ComboBox WeergegevenZetelsComboBox;
+        internal Button VerwijderOpZetelButton;
+        internal Button LeegVluchtButton;
+        internal Label AanpassenVluchtLabel;
+        private bool _contentLoaded;
+
+        public VluchtBezettingenWindow()
+        {
+            this.InitializeComponent();
+            this._vluchten = VluchtLader.VluchtenUitFolder("vluchten");
+            foreach (Vlucht vlucht in this._vluchten)
+                this.VluchtenComboBox.Items.Add((object)vlucht.Code);
+            if (this.VluchtenComboBox.Items.Count <= 0)
+                return;
+            this.VluchtenComboBox.SelectedIndex = 0;
+        }
+
+        private void VluchtenComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (this.VluchtenComboBox.SelectedIndex == -1)
+                return;
+            this._geselecteerdeVlucht = this._vluchten[this.VluchtenComboBox.SelectedIndex];
+            this.ToonBezettingen();
+        }
+
+        private void PassagierNaamFilterTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            this.ToonBezettingen();
+        }
+
+        private void RadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            this.ToonBezettingen();
+        }
+
+        private void ToonBezettingen()
+        {
+            if (this._geselecteerdeVlucht == null)
+                return;
+            string text = this.PassagierNaamFilterTextBox.Text;
+            bool? isChecked = this.StandaardMaaltijdFilterRadioButton.IsChecked;
+            bool flag1 = true;
+            List<Bezetting> bezettingenLijst;
+            if ((isChecked.GetValueOrDefault() == flag1 ? (isChecked.HasValue ? 1 : 0) : 0) != 0)
+            {
+                bezettingenLijst = this._geselecteerdeVlucht.Bezettingen.Vind(text, Maaltijd.Standaard);
+            }
+            else
+            {
+                isChecked = this.VegitarischeMaaltijdFilterRadioButton.IsChecked;
+                bool flag2 = true;
+                bezettingenLijst = (isChecked.GetValueOrDefault() == flag2 ? (isChecked.HasValue ? 1 : 0) : 0) == 0 ? this._geselecteerdeVlucht.Bezettingen.Vind(text) : this._geselecteerdeVlucht.Bezettingen.Vind(text, Maaltijd.Vegetarisch);
+            }
+            isChecked = this.ZetelSorterenRadioButton.IsChecked;
+            bool flag3 = true;
+            if ((isChecked.GetValueOrDefault() == flag3 ? (isChecked.HasValue ? 1 : 0) : 0) != 0)
+            {
+                BezettingenSorteren.OpZetel(bezettingenLijst);
+            }
+            else
+            {
+                isChecked = this.PassagiersnaamSorterenRadioButton.IsChecked;
+                bool flag2 = true;
+                if ((isChecked.GetValueOrDefault() == flag2 ? (isChecked.HasValue ? 1 : 0) : 0) != 0)
+                    BezettingenSorteren.OpPassagiersnaam(bezettingenLijst);
+            }
+            this.AantallenLabel.Content = (object)string.Format("{0} bezettingen weergegeven: ", (object)bezettingenLijst.Count);
+            int num1 = VluchtBezettingenWindow.Aantal(bezettingenLijst, Maaltijd.Standaard);
+            int num2 = VluchtBezettingenWindow.Aantal(bezettingenLijst, Maaltijd.Vegetarisch);
+            Label aantallenLabel = this.AantallenLabel;
+            string str = aantallenLabel.Content.ToString() + string.Format("{0} standaard en {1} vegetarische maaltijden", (object)num1, (object)num2);
+            aantallenLabel.Content = (object)str;
+            this.BezettingenListBox.Items.Clear();
+            foreach (Bezetting bezetting in bezettingenLijst)
+                this.BezettingenListBox.Items.Add((object)string.Format("{0} | {1} | {2}", (object)bezetting.Zetel, (object)bezetting.Passagiernaam.PadRight(30), (object)bezetting.Maaltijd.ToString().PadRight(10)));
+            this.WeergegevenZetelsComboBox.Items.Clear();
+            foreach (Bezetting bezetting in bezettingenLijst)
+                this.WeergegevenZetelsComboBox.Items.Add((object)bezetting.Zetel);
+        }
+
+        private static int Aantal(List<Bezetting> bezettingenLijst, Maaltijd maaltijd)
+        {
+            int num = 0;
+            foreach (Bezetting bezetting in bezettingenLijst)
+            {
+                if (bezetting.Maaltijd == maaltijd)
+                    ++num;
+            }
+            return num;
+        }
+
+        private void VerwijderOpZetelButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this._geselecteerdeVlucht == null)
+                return;
+            string zetel = this.WeergegevenZetelsComboBox.SelectedValue.ToString();
+            if (this._geselecteerdeVlucht.Bezettingen.BevatBezettingMetZetel(zetel))
+            {
+                this._geselecteerdeVlucht.Bezettingen.Verwijder(zetel);
+                this.ToonBezettingen();
+                this.AanpassenVluchtLabel.Content = (object)string.Format("Bezetting voor zetel {0} werd verwijderd.", (object)zetel);
+            }
+            else
+                this.AanpassenVluchtLabel.Content = (object)string.Format("Geen bezetting teruggevonden voor zetel {0}.", (object)zetel);
+        }
+
+        private void LeegVluchtButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this._geselecteerdeVlucht == null)
+                return;
+            this._geselecteerdeVlucht.Bezettingen.Legen();
+            this.ToonBezettingen();
+            this.AanpassenVluchtLabel.Content = (object)"Alle bezettingen voor deze vlucht werden verwijderd.";
+        }
+
+        
+        public void InitializeComponent()
+        {
+            if (this._contentLoaded)
+                return;
+            this._contentLoaded = true;
+            Application.LoadComponent((object)this, new Uri("/PantaAir.WpfApp;component/vluchtbezettingenwindow.xaml", UriKind.Relative));
+        }
+        
+        void IComponentConnector.Connect(int connectionId, object target)
+        {
+            switch (connectionId)
+            {
+                case 1:
+                    this.VluchtenComboBox = (ComboBox)target;
+                    this.VluchtenComboBox.SelectionChanged += new SelectionChangedEventHandler(this.VluchtenComboBox_SelectionChanged);
+                    break;
+                case 2:
+                    this.AantallenLabel = (Label)target;
+                    break;
+                case 3:
+                    this.BezettingenListBox = (ListBox)target;
+                    break;
+                case 4:
+                    this.PassagierNaamFilterTextBox = (TextBox)target;
+                    this.PassagierNaamFilterTextBox.TextChanged += new TextChangedEventHandler(this.PassagierNaamFilterTextBox_TextChanged);
+                    break;
+                case 5:
+                    this.GeenMaaltijdTypeFilterRadioButton = (RadioButton)target;
+                    this.GeenMaaltijdTypeFilterRadioButton.Checked += new RoutedEventHandler(this.RadioButton_Checked);
+                    break;
+                case 6:
+                    this.StandaardMaaltijdFilterRadioButton = (RadioButton)target;
+                    this.StandaardMaaltijdFilterRadioButton.Checked += new RoutedEventHandler(this.RadioButton_Checked);
+                    break;
+                case 7:
+                    this.VegitarischeMaaltijdFilterRadioButton = (RadioButton)target;
+                    this.VegitarischeMaaltijdFilterRadioButton.Checked += new RoutedEventHandler(this.RadioButton_Checked);
+                    break;
+                case 8:
+                    this.ZetelSorterenRadioButton = (RadioButton)target;
+                    this.ZetelSorterenRadioButton.Checked += new RoutedEventHandler(this.RadioButton_Checked);
+                    break;
+                case 9:
+                    this.PassagiersnaamSorterenRadioButton = (RadioButton)target;
+                    this.PassagiersnaamSorterenRadioButton.Checked += new RoutedEventHandler(this.RadioButton_Checked);
+                    break;
+                case 10:
+                    this.WeergegevenZetelsComboBox = (ComboBox)target;
+                    break;
+                case 11:
+                    this.VerwijderOpZetelButton = (Button)target;
+                    this.VerwijderOpZetelButton.Click += new RoutedEventHandler(this.VerwijderOpZetelButton_Click);
+                    break;
+                case 12:
+                    this.LeegVluchtButton = (Button)target;
+                    this.LeegVluchtButton.Click += new RoutedEventHandler(this.LeegVluchtButton_Click);
+                    break;
+                case 13:
+                    this.AanpassenVluchtLabel = (Label)target;
+                    break;
+                default:
+                    this._contentLoaded = true;
+                    break;
+            }
+        }
+    }
+}
+*/

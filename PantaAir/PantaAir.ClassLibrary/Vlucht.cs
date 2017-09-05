@@ -1,8 +1,14 @@
-﻿using System.Collections.Generic;
-namespace ClassLibrary
+﻿namespace ClassLibrary
 {
     public class Vlucht
     {
-        // hier aanvullen
+        public Vlucht(string code)
+        {
+            this.Code = code;
+        }
+
+        public string Code { get; }
+
+        public Bezettingen Bezettingen { get; } = new Bezettingen();
     }
 }
