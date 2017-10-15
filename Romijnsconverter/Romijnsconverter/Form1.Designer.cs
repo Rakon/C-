@@ -49,7 +49,6 @@
             this.lblresult.Name = "lblresult";
             this.lblresult.Size = new System.Drawing.Size(194, 50);
             this.lblresult.TabIndex = 1;
-            this.lblresult.Text = "label1";
             this.lblresult.Click += new System.EventHandler(this.lblresult_Click);
             // 
             // btnC
@@ -75,7 +74,7 @@
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Romijnse Converter";
+            this.Text = "Romeinse Converter";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -36,7 +36,7 @@ namespace Romijnsconverter
         {
             int num = 0;
             output = "";
-            num = Convert.ToInt32(lblresult.Text);
+            num = Convert.ToInt32(textBox1.Text);
             while (num > 0)
             {
                 num = find(num);
@@ -48,7 +48,8 @@ namespace Romijnsconverter
         {
             int i = 0;
             
-            while (index(i) <= Num)
+            while (index[i] <= Num)
+            //System.IndexOutOfRangeException: 'De index ligt buiten de matrixgrenzen.'
             {
                 i += 1;
             }
@@ -61,11 +62,10 @@ namespace Romijnsconverter
             {
                 indexLimit = 0;
             }
-            output = output + rIndex(indexlimit);
+            output = output + rIndex[indexLimit];
             
-            Num = Num - index(indexLimit);
-            // hier ben ik dus op aan het dutsen, in de while loop leest hij mij array uit maar dan in de output van de functie wil hij deze niet herkennen,
-            //gebruik ik nu de function fout, of zit er elders een probleem?
+            Num = Num - index[indexLimit];
+            
             return Num;
             
         }
